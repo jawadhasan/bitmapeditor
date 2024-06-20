@@ -48,7 +48,7 @@ window.onload = (): void => {
 
                 fileReader.addEventListener("loadend", () => {
 
-                    const data: Uint8Array = new Uint8Array(fileReader.result);
+                    const data: Uint8Array = new Uint8Array(<ArrayBuffer>fileReader.result);
 
                     if (BMPTools.isPossiblyBMPFormat(data)) {
                         const bittMappData: IBittMappData = BMPTools.extractBitmap(data);

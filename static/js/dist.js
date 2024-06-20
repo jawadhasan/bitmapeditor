@@ -1,3 +1,134 @@
+class LinkedNode {
+    get next() {
+        return this._next;
+    }
+    set next(node) {
+        this._next = node;
+        if (node.prev !== this) {
+            node.prev = this;
+        }
+    }
+    get prev() {
+        return this._prev;
+    }
+    set prev(node) {
+        this._prev = node;
+        if (node.next !== this) {
+            node.next = this;
+        }
+    }
+}
+class LinkedList {
+    push(node) {
+        if (!this._start) {
+            this._start = node;
+            this._end = node;
+            return;
+        }
+        this._end.next = node;
+        this._end = node;
+    }
+    pop() {
+        if (!this._end) {
+            return null;
+        }
+        const node = this._end;
+        this._end = this._end.prev;
+        return node;
+    }
+}
+class ActionNode extends LinkedNode {
+    constructor(undo, redo) {
+        super();
+        this.undo = undo;
+        this.redo = redo;
+    }
+}
+class ActionList extends LinkedList {
+    push(node) {
+        // super(node);
+    }
+}
+class BMPTools {
+    static extractBitmap(inputData) {
+        const headerData = BMPTools.extractHeaderData(inputData);
+        const pixelData = inputData.slice(headerData.pixelDataOffset, headerData.fileLength);
+        const rowSize = (headerData.width - 1 - (headerData.width - 1) % 32 + 32) / 8;
+        const outputData = new Uint8Array(Math.ceil((headerData.width * headerData.height) / 8));
+        if (headerData.height > 0) {
+            let bitCount = 0;
+            for (let y = headerData.height - 1; y >= 0; y--) {
+                const rowStart = rowSize * y;
+                for (let x = 0; x < headerData.width; x++) {
+                    const inputByte = Math.floor(x / 8);
+                    const outputByte = Math.floor((((headerData.height - 1 - y) * headerData.width) + x) / 8);
+                    const inputMask = 1 << (x % 8);
+                    const val = Serialisers.reverseUint32BitOrder(~pixelData[rowStart + inputByte] & inputMask) >> 24;
+                    outputData[outputByte] = val + outputData[outputByte];
+                    bitCount++;
+                }
+            }
+        }
+        else {
+            throw new Error("Cannot read bitmaps of inverted height");
+        }
+        return {
+            data: outputData,
+            height: headerData.height,
+            width: headerData.width
+        };
+    }
+    static extractHeaderData(inputData) {
+        const headerData = {};
+        if (inputData.length < 54) {
+            throw new Error("Data not valid (Not long enough, must be at least 54 bytes)");
+        }
+        if (!(inputData[0] === 0x42 && inputData[1] === 0x4d)) {
+            throw new Error("Data not valid (No BM header)");
+        }
+        headerData.fileLength = Serialisers.readUint32(inputData, 2, true);
+        if (headerData.fileLength !== inputData.length) {
+            throw new Error("Data not valid (Length incorrect)");
+        }
+        headerData.pixelDataOffset = Serialisers.readUint32(inputData, 10, true);
+        headerData.headerLength = Serialisers.readUint32(inputData, 14, true);
+        headerData.width = Serialisers.readUint32(inputData, 18, true);
+        headerData.height = Serialisers.readInt32(inputData, 22, true);
+        if (headerData.height <= 0) {
+            throw new Error("Cannot read bitmaps of inverted height");
+        }
+        headerData.planes = Serialisers.readUint16(inputData, 26, true);
+        if (headerData.planes !== 1) {
+            throw new Error("Data not valid (Only one plane supported)");
+        }
+        headerData.bitsPerPixel = Serialisers.readUint16(inputData, 28, true);
+        if (headerData.bitsPerPixel !== 1) {
+            throw new Error("Data not valid (Only monochrome BMP data supported)");
+        }
+        headerData.compressed = Serialisers.readUint32(inputData, 30, true);
+        if (headerData.compressed !== 0) {
+            throw new Error("Data not valid (Only uncompressed data supported)");
+        }
+        headerData.imageSize = Serialisers.readUint32(inputData, 34, true);
+        headerData.numberColors = Serialisers.readUint32(inputData, 46, true);
+        headerData.importantColors = Serialisers.readUint32(inputData, 50, true);
+        headerData.bytesRead = headerData.headerLength + 14;
+        return headerData;
+    }
+    static isPossiblyBMPFormat(inputData) {
+        if (inputData.length < 54) {
+            return false;
+        }
+        if (!(inputData[0] === 0x42 && inputData[1] === 0x4d)) {
+            return false;
+        }
+        const fileLen = Serialisers.readUint32(inputData, 2, true);
+        if (fileLen !== inputData.length) {
+            return false;
+        }
+        return true;
+    }
+}
 var MouseButton;
 (function (MouseButton) {
     MouseButton[MouseButton["LEFT"] = 0] = "LEFT";
@@ -378,3 +509,89 @@ class Editor {
         }
     }
 }
+class Serialisers {
+    static readInt32(data, start, littleEndian = false) {
+        // console.log(new DataView(data.buffer.slice(start, start + 4)).getInt32(0));
+        return new DataView(data.buffer).getInt32(start, littleEndian);
+    }
+    static readUint32(data, start, littleEndian = false) {
+        // console.log(data.buffer.slice(start, start + 4));
+        // console.log(new DataView(data.buffer).getUint32(start, littleEndian));
+        return new DataView(data.buffer).getUint32(start, littleEndian);
+    }
+    static readUint16(data, start, littleEndian = false) {
+        return new DataView(data.buffer).getUint16(start, littleEndian);
+    }
+    static reverseUint32BitOrder(data) {
+        let i = 0;
+        let reversed = 0;
+        let last = 0;
+        while (i < 31) {
+            last = data & 1;
+            data >>= 1;
+            reversed += last;
+            reversed <<= 1;
+            i++;
+        }
+        return reversed;
+    }
+}
+window.onload = () => {
+    const editor = new Editor({
+        canvas: document.getElementById("editor"),
+        canvasHeight: 280,
+        canvasWidth: 280,
+        height: 32,
+        width: 32
+    });
+    document.getElementById("pencil_mode_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        editor.pencilMode();
+    });
+    document.getElementById("eraser_mode_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        editor.eraserMode();
+    });
+    document.getElementById("selection_mode_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        editor.selectionMode();
+    });
+    document.getElementById("save_file_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        const filename = document.getElementById("filename_input").value;
+        editor.saveToFile(filename);
+    });
+    document.getElementById("open_file_button").addEventListener("drop", (event) => {
+        event.preventDefault();
+        const dataTransfer = event.dataTransfer;
+        if (dataTransfer.items.length > 1) {
+            alert("One file only!");
+            return;
+        }
+        if (dataTransfer.items) {
+            for (const item of dataTransfer.items) {
+                const file = item.getAsFile();
+                const fileReader = new FileReader();
+                fileReader.addEventListener("loadend", () => {
+                    const data = new Uint8Array(fileReader.result);
+                    if (BMPTools.isPossiblyBMPFormat(data)) {
+                        const bittMappData = BMPTools.extractBitmap(data);
+                        const pixelWidth = bittMappData.width;
+                        const pixelHeight = bittMappData.height;
+                        editor.loadFromData(bittMappData.data, pixelWidth, pixelHeight);
+                    }
+                    else {
+                        const pixelWidth = parseInt(document.getElementById("open_file_pixelwidth_input").value, 10);
+                        const pixelHeight = parseInt(document.getElementById("open_file_pixelheight_input").value, 10);
+                        editor.loadFromData(data, pixelWidth, pixelHeight);
+                    }
+                });
+                fileReader.readAsArrayBuffer(file);
+            }
+        }
+    });
+    document.getElementById("open_file_button").addEventListener("dragover", (event) => {
+        event.preventDefault();
+    });
+};
+// const testData: Uint8Array = new Uint8Array([66, 77, 190, 0, 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 40, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 128, 0, 0, 0, 116, 18, 0, 0, 116, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 15, 255, 255, 255, 247, 246, 142, 115, 183, 246, 181, 173, 183, 240, 141, 173, 183, 246, 181, 173, 183, 249, 142, 109, 23, 255, 255, 255, 247, 246, 141, 127, 247, 246, 189, 127, 247, 244, 138, 191, 247, 242, 186, 191, 247, 246, 138, 191, 247, 255, 255, 255, 247, 247, 139, 71, 247, 247, 187, 123, 247, 241, 184, 67, 247, 246, 187, 91, 247, 241, 188, 219, 247, 255, 255, 255, 247]);

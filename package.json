@@ -1,0 +1,32 @@
+{
+  "name": "bitmapeditor",
+  "version": "1.0.0",
+  "description": "A simple editor",
+  "main": "app.js",
+  "scripts": {
+    "buildtsc": "tsc",
+    "buildbasic": "del-cli --force static/js/*.js && tsc",
+    "build": "del-cli --force static/js/*.js && tsc && type \"static\\js\\linkednode.js\" \"static\\js\\linkedlist.js\" \"static\\js\\actionnode.js\" \"static\\js\\actionlist.js\" \"static\\js\\bmptools.js\" \"static\\js\\editor.js\" \"static\\js\\serialisers.js\" \"static\\js\\main.js\" > static\\js\\dist.js",
+    "buildl2": "rm -rf static/js/*.js && tslint -c tslint.json \"src/**/*.ts\" && tsc && cat static/js/linkednode.js static/js/linkedlist.js static/js/actionnode.js static/js/actionlist.js static/js/bmptools.js static/js/editor.js static/js/serialisers.js static/js/main.js > static/js/dist.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jawadhasan/bitmapeditor.git"
+  },
+  "keywords": [
+    "bitmap",
+    "javascript",
+    "html"
+  ],
+  "author": "Jawad Hasan Shani",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jawadhasan/bitmapeditor/issues"
+  },
+  "homepage": "https://github.com/jawadhasan/bitmapeditor#readme",
+  "devDependencies": {
+    "del-cli": "^5.1.0",
+    "typescript": "^5.4.5"
+  }
+}
