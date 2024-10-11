@@ -62,31 +62,31 @@ class Editor {
         if (options.canvas) {
             this.canvas = options.canvas;
         } else {
-            throw new Error("BittMappEditor must be initialized with a canvas.");
+            throw new Error("Editor must be initialized with a canvas.");
         }
 
         if (options.canvasWidth) {
             this.canvasWidth = options.canvasWidth;
         } else {
-            throw new Error("BittMappEditor must be constructed with a canvasWidth.");
+            throw new Error("Editor must be constructed with a canvasWidth.");
         }
 
         if (options.canvasHeight) {
             this.canvasHeight = options.canvasHeight;
         } else {
-            throw new Error("BittMappEditor must be constructed with a canvasHeight.");
+            throw new Error("Editor must be constructed with a canvasHeight.");
         }
 
         if (options.width) {
             this._width = options.width;
         } else {
-            throw new Error("BittMappEditor must be constructed with a width.");
+            throw new Error("Editor must be constructed with a width.");
         }
 
         if (options.height) {
             this._height = options.height;
         } else {
-            throw new Error("BittMappEditor must be constructed with a height.");
+            throw new Error("Editor must be constructed with a height.");
         }
 
         this._context = this.canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -104,6 +104,7 @@ class Editor {
 
         this._context.scale(this._scale, this._scale);
 
+        //new Uint8Array(4); // 4 bytes long
         this._data = new Uint8Array((this._width / 8) * this._height);
         this._selection = new Uint8Array((this._width / 8) * this._height);
 
@@ -192,7 +193,9 @@ class Editor {
         const byte: number = this._calculateByteFromCoords(x, y);
         // const byte: number = ((y * (this._width / 8)) + Math.floor(x / 8));
         const mask: number = this._calculateByteMask(x);
+        console.log('mask:', mask);
         this._data[byte] = this._data[byte] |= mask;
+        //console.log('Bit-Wise OR: ',this._data[byte]);
     }
 
 
@@ -240,11 +243,12 @@ class Editor {
         this.resize(width, height);
     }
 
-    public saveSample(filename: string="canvas"){
-        const content = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 5, 0, 0, 0, 5, 8, 6, 0, 0, 0, 141, 111, 38, 229, 0, 0, 0, 28, 73, 68, 65, 84, 8, 215, 99, 248, 255, 255, 63, 195, 127, 6, 32, 5, 195, 32, 18, 132, 208, 49, 241, 130, 88, 205, 4, 0, 14, 245, 53, 203, 209, 142, 14, 31, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
-        console.log("content ", content);
+    public saveSample(filename: string){
+        const testData: Uint8Array = new Uint8Array([66, 77, 190, 0, 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 40, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 128, 0, 0, 0, 116, 18, 0, 0, 116, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 15, 255, 255, 255, 247, 246, 142, 115, 183, 246, 181, 173, 183, 240, 141, 173, 183, 246, 181, 173, 183, 249, 142, 109, 23, 255, 255, 255, 247, 246, 141, 127, 247, 246, 189, 127, 247, 244, 138, 191, 247, 242, 186, 191, 247, 246, 138, 191, 247, 255, 255, 255, 247, 247, 139, 71, 247, 247, 187, 123, 247, 241, 184, 67, 247, 246, 187, 91, 247, 241, 188, 219, 247, 255, 255, 255, 247]);
+        const testData2 = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 5, 0, 0, 0, 5, 8, 6, 0, 0, 0, 141, 111, 38, 229, 0, 0, 0, 28, 73, 68, 65, 84, 8, 215, 99, 248, 255, 255, 63, 195, 127, 6, 32, 5, 195, 32, 18, 132, 208, 49, 241, 130, 88, 205, 4, 0, 14, 245, 53, 203, 209, 142, 14, 31, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
+        console.log("data ", testData);
 
-        const contentBlob = new Blob([content], { type: "image/bmp" });
+        const contentBlob = new Blob([testData], { type: "image/bmp" });
         const url = window.URL.createObjectURL(contentBlob);
 
         this._downloadHelper.href = url;
@@ -253,42 +257,168 @@ class Editor {
         window.URL.revokeObjectURL(url);
     }
 
-    public saveToFile2 (filename: string="test.bmp") {
+    public saveSampleCanvas (filename: string) {   
+        // canvas show example 
+        const img1 = document.getElementById("test-img") as HTMLImageElement;
+        const canvasImage = this._context.canvas.toDataURL("image/bmp");
+        img1.src = canvasImage; 
 
-       const blob: Blob = new Blob([this._data], { type: "image/bmp" });
-       const url: string = window.URL.createObjectURL(blob);
-       this._downloadHelper.href = url; // this._context.canvas.toDataURL("image/bmp").replace("image/png", "image/octet-stream")
-       this._downloadHelper.download = filename;
-       this._downloadHelper.click();
-       window.URL.revokeObjectURL(url);
-
-       console.log("------------");
-       console.log("data ", this._data);
-
-
-
-       // canvas approach
-       const img1 = document.getElementById("test-img") as HTMLImageElement;
-       const canvasImage = this._context.canvas.toDataURL("image/bmp");
-       img1.src = canvasImage; // url1;       
-    //    canvas download approach
-    //    const link = document.getElementById("link");
-    //    link.setAttribute("download", "canvasToDataURL.bmp");
-    //    link.setAttribute("href", this._context.canvas.toDataURL("image/bmp").replace("image/png", "image/octet-stream"));
-    //    link.click();
+     //    canvas download approach
+        const link = document.getElementById("link");
+        link.setAttribute("download", filename);
+        link.setAttribute("href", this._context.canvas.toDataURL("image/bmp").replace("image/png", "image/octet-stream"));
+        link.click();
+ 
+ 
+     }
 
 
+     public saveData() {
+        var arrayBuffer = new ArrayBuffer(this._data.length);
+        var dataView = new DataView(arrayBuffer);
+        for(var i = 0; i < this._data.length; i ++) {
+          //  dataView.setUint8(i, this._data.charCodeAt(i));
+        }
+        var blob = new Blob([dataView], {type: "application/octet-stream"});
+       // saveAs(blob, "test.bmp");
     }
+
+    public saveManualImg(){
+        //https://stackoverflow.com/questions/50620821/uint8array-to-image-in-javascript
+        const header_size = 54;
+
+        const width = 255;
+        const height = 255;
+           
+        const image_size = width * height * 4;
+    
+        const arr = new Uint8Array(header_size + image_size);
+        const view = new DataView(arr.buffer);
+    
+        // File Header
+    
+        // BM magic number.
+        view.setUint16(0, 0x424D, false);
+        // File size.
+        view.setUint32(2, arr.length, true);
+        // Offset to image data.
+        view.setUint32(10, header_size, true);
+    
+        // BITMAPINFOHEADER
+    
+        // Size of BITMAPINFOHEADER
+        view.setUint32(14, 40, true);
+        // Width
+        view.setInt32(18, width, true);
+        // Height (signed because negative values flip
+        // the image vertically).
+        view.setInt32(22, height, true);
+        // Number of colour planes (colours stored as
+        // separate images; must be 1).
+        view.setUint16(26, 1, true);
+        // Bits per pixel.
+        view.setUint16(28, 32, true);
+        // Compression method, 0 = BI_RGB
+        view.setUint32(30, 0, true);
+        // Image size in bytes.
+        view.setUint32(34, image_size, true);
+        // Horizontal resolution, pixels per metre.
+        // This will be unused in this situation.
+        view.setInt32(38, 10000, true);
+        // Vertical resolution, pixels per metre.
+        view.setInt32(42, 10000, true);
+        // Number of colours. 0 = all
+        view.setUint32(46, 0, true);
+        // Number of important colours. 0 = all
+        view.setUint32(50, 0, true);
+    
+        // Pixel data.
+        for (let w = 0; w < width; ++w) {
+          for (let h = 0; h < height; ++h) {
+            const offset = header_size + (h * width + w) * 4;
+            arr[offset + 0] = w;     // R value
+            arr[offset + 1] = h;     // G value
+            arr[offset + 2] = 255-w; // B value
+            // arr[offset + 3] is ignored but must still be present because we specified 32 BPP
+          }
+        }
+    
+      
+const blob = new Blob([arr], { type: "image/bmp" });
+const url = window.URL.createObjectURL(blob);
+
+this._downloadHelper.href = url;
+this._downloadHelper.download = 'save2.bmp';
+this._downloadHelper.click();
+window.URL.revokeObjectURL(url);
+
+// const img = document.getElementById('i');
+// img.src = url;
+}
+ 
+public saveMix(){
+    const header_size = 54;
+
+    const width = 255;
+    const height = 255;
+       
+    const image_size = width * height * 4;
+
+    const arr = this._data.buffer;
+    const view = new DataView(this._data.buffer);
+
+      // File Header
+    
+        // BM magic number.
+        view.setUint16(0, 0x424D, false);
+        // File size.
+        view.setUint32(2, this._data.length, true);
+        // Offset to image data.
+        view.setUint32(10, header_size, true);
+
+          // BITMAPINFOHEADER
+    
+        // Size of BITMAPINFOHEADER
+        view.setUint32(14, 40, true);
+        // Width
+        view.setInt32(18, width, true);
+        // Height (signed because negative values flip
+        // the image vertically).
+        view.setInt32(22, height, true);
+        // Number of colour planes (colours stored as
+        // separate images; must be 1).
+        view.setUint16(26, 1, true);
+        // Bits per pixel.
+        view.setUint16(28, 32, true);
+        // Compression method, 0 = BI_RGB
+        view.setUint32(30, 0, true);
+        // Image size in bytes.
+        view.setUint32(34, image_size, true);
+        // Horizontal resolution, pixels per metre.
+        // This will be unused in this situation.
+        view.setInt32(38, 10000, true);
+        // Vertical resolution, pixels per metre.
+        view.setInt32(42, 10000, true);
+        // Number of colours. 0 = all
+        view.setUint32(46, 0, true);
+        // Number of important colours. 0 = all
+        view.setUint32(50, 0, true);
+
+               // Pixel data.
+  
+         
+
+}
     public saveToFile (filename: string) {
-        const blob: Blob = new Blob([this._data], {type: "octet/stream"});
+        console.log('data content', this._data);
+        // const blob: Blob = new Blob([this._data], {type: "octet/stream"}); // {type: "application/octet-stream"}
+        const blob: Blob = new Blob([this._data], {type: "image/bmp"});
         const url: string = window.URL.createObjectURL(blob);
         this._downloadHelper.href = url;
         this._downloadHelper.download = filename;
         this._downloadHelper.click();
         window.URL.revokeObjectURL(url);
     }
-
-
 
     get height (): number {
         return this._height;

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BittMapp</title>
+    <title>BitmapEditor</title>
     <link rel="stylesheet" href="./static/css/reset.css" />
     <link rel="stylesheet" href="./static/css/styles.css" />
     <script src="./static/js/dist.js"></script>
@@ -9,15 +9,20 @@
 <body>
     <header>
         <h2>Modes</h2>
-        <ul id="modes">
+        <ul id="modes" class="hide-panel">
             <li><a href="#" id="pencil_mode_button">Pencil Mode</a></li>
             <li><a href="#" id="eraser_mode_button">Eraser Mode</a></li>
             <li><a href="#" id="selection_mode_button">Selection Mode</a></li>
         </ul>
         <h2>File Options</h2>
         <ul id="files">
-            <li><input type="text" id="open_file_pixelwidth_input" value="32" /> <input type="text" id="open_file_pixelheight_input" value="32" /> <a href="#" id="open_file_button">Open File</a></li>
+            <li class="hide-panel"><input type="text" id="open_file_pixelwidth_input" value="32" /> <input type="text" id="open_file_pixelheight_input" value="32" /> <a href="#" id="open_file_button">Open File</a></li>
             <li><input type="text" id="filename_input" /> <a href="#" id="save_file_button">Save File</a></li>
+            <li> <button id="sample1_download_button">Sample-1</button></li>
+            <li> <button id="sample_manualimg_button">Manual</button></li>
+            <li> <button id="sample_savemix_button">savemix</button></li>
+
+            <li> <button id="sample_canvas_button">Sample Canvas</button></li> 
         </ul>
     </header>
     <section id="main">
@@ -29,7 +34,4 @@
     <br />
     <a id="link">SomeLink</a>
 </body>
-  <!-- App Code -->
-  <script type="module" src="./app.js" ></script>
-  <!-- <script type="text/javascript" src="app.js"></script> -->
 </html>

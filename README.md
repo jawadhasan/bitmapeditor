@@ -6,6 +6,7 @@ A simple example
 `npm install`
 
 ## Build
+Everytime change in ts need to build the app
 `npm run build`
 
 ## Run Application

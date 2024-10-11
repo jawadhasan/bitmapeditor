@@ -50,3 +50,7 @@ canvas#editor {
     max-width: 100%;
     max-height: 100%;
 }
+
+.hide-panel{
+    visibility: hidden !important;
+}

@@ -1,5 +1,6 @@
 window.onload = (): void => {
 
+    console.log('main entry point');
     const editor: Editor = new Editor({
         canvas: document.getElementById("editor") as HTMLCanvasElement,
         canvasHeight: 280,
@@ -27,6 +28,29 @@ window.onload = (): void => {
         event.preventDefault();
         const filename: string = (document.getElementById("filename_input") as HTMLInputElement).value;
         editor.saveToFile(filename);
+    });
+
+    (document.getElementById("sample1_download_button") as HTMLButtonElement).addEventListener("click", (event: MouseEvent) => {
+        event.preventDefault();
+        const filename: string = "sample1.bmp";
+        editor.saveSample(filename);
+    });
+
+    (document.getElementById("sample_manualimg_button") as HTMLButtonElement).addEventListener("click", (event: MouseEvent) => {
+        event.preventDefault(); 
+       editor.saveManualImg();
+    });
+
+    (document.getElementById("sample_savemix_button") as HTMLButtonElement).addEventListener("click", (event: MouseEvent) => {
+        event.preventDefault(); 
+       editor.saveMix();
+    });
+
+
+    (document.getElementById("sample_canvas_button") as HTMLButtonElement).addEventListener("click", (event: MouseEvent) => {
+        event.preventDefault();
+        const filename: string = "sample_canvas.bmp";
+        editor.saveSampleCanvas(filename);
     });
 
     (document.getElementById("open_file_button") as HTMLAnchorElement).addEventListener("drop", (event: DragEvent) => {

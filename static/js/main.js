@@ -1,4 +1,5 @@
 window.onload = () => {
+    console.log('main entry point');
     const editor = new Editor({
         canvas: document.getElementById("editor"),
         canvasHeight: 280,
@@ -22,6 +23,24 @@ window.onload = () => {
         event.preventDefault();
         const filename = document.getElementById("filename_input").value;
         editor.saveToFile(filename);
+    });
+    document.getElementById("sample1_download_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        const filename = "sample1.bmp";
+        editor.saveSample(filename);
+    });
+    document.getElementById("sample_manualimg_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        editor.saveManualImg();
+    });
+    document.getElementById("sample_savemix_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        editor.saveMix();
+    });
+    document.getElementById("sample_canvas_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        const filename = "sample_canvas.bmp";
+        editor.saveSampleCanvas(filename);
     });
     document.getElementById("open_file_button").addEventListener("drop", (event) => {
         event.preventDefault();
